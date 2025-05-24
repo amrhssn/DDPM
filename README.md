@@ -8,6 +8,7 @@
 $$ 
 β_t = β_{\rm start} + \frac{t-1}{T-1}\,(β_{\rm end}-β_{\rm start}),\quad
 $$
+
 where $β_{\rm start}=10^{-4},\,β_{\rm end}=0.02,\,T=1000.$
 
 $$
@@ -18,6 +19,7 @@ $$
 
 
 ### Best Practice (Cosine)  
+
 $$
 \bar α_t
 = \frac{\cos\!\Bigl(\tfrac{t/T + s}{1 + s}\,\tfrac\pi2\Bigr)^2}
@@ -29,29 +31,38 @@ s=0.008,\;T=1000.
 $$
 
 ### Cache  
+
 Precompute arrays of  
+
 $$
-\sqrt{α_t},\,
-\sqrt{\bar α_t},\,
-\sqrt{1-\bar α_t},\,
-\sigma_q(t)=\sqrt{\frac{(1-α_t)(1-\bar α_{t-1})}{1-\bar α_t}}.$$
+\sqrt{α_t},\quad
+\sqrt{\bar α_t},\quad
+\sqrt{1-\bar α_t},\quad
+\sigma_q(t)=\sqrt{\frac{(1-α_t)(1-\bar α_{t-1})}{1-\bar α_t}}.
+$$
+
 ---
 
 ## 2. Forward Process
 
 ### Definition  
+
 $$
-q(x_t\mid x_0)=\mathcal{N}\bigl(x_t;\sqrt{\bar α_t}\,x_0,\,(1-\bar α_t)\,I\bigr).
+q(x_t\mid x_0)=\mathcal{N}\bigl(x_t;\sqrt{\bar α_t}x_0, (1-\bar α_t)I\bigr).
 $$  
+
 ### Sampling  
+
 $$
 x_t = \sqrt{\bar α_t}\,x_0 \;+\;\sqrt{1-\bar α_t}\,ε_0,\quad ε_0\sim\mathcal N(0,I).
 $$
+
 ---
 
 ## 3. Ground-Truth Posterior
 
 ### Posterior 
+
 $$
     q(x_{t-1}\mid x_t,x_0)
     = \mathcal{N}\bigl(x_{t-1};\mu_q(x_t,x_0),\,\sigma_q^2(t)\,I\bigr),
@@ -63,6 +74,7 @@ $$
     = \frac{\sqrt{α_t}(1-\bar α_{t-1})}{1-\bar α_t}\,x_t
       + \frac{\sqrt{\bar α_{t-1}}(1-α_t)}{1-\bar α_t}\,x_0.
 $$
+
 ---
 
 ## 4. Denoising Network: Predict $ε_0$
