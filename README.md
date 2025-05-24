@@ -18,6 +18,7 @@ $$
 
 
 ### Best Practice (Cosine)  
+
 $$
 \bar α_t
 = \frac{\cos\!\Bigl(\tfrac{t/T + s}{1 + s}\,\tfrac\pi2\Bigr)^2}
@@ -30,32 +31,41 @@ $$
 
 ### Cache  
 Precompute arrays of  
+
 $$
 \sqrt{α_t},\,
 \sqrt{\bar α_t},\,
 \sqrt{1-\bar α_t},\,
-\sigma_q(t)=\sqrt{\frac{(1-α_t)(1-\bar α_{t-1})}{1-\bar α_t}}.$$
+\sigma_q(t)=\sqrt{\frac{(1-α_t)(1-\bar α_{t-1})}{1-\bar α_t}}.
+$$
+
 ---
 
 ## 2. Forward Process
 
 ### Definition  
+
 $$
 q(x_t\mid x_0)=\mathcal{N}\bigl(x_t;\sqrt{\bar α_t}\,x_0,\,(1-\bar α_t)\,I\bigr).
 $$  
+
 ### Sampling  
+
 $$
 x_t = \sqrt{\bar α_t}\,x_0 \;+\;\sqrt{1-\bar α_t}\,ε_0,\quad ε_0\sim\mathcal N(0,I).
 $$
+
 ---
 
 ## 3. Ground-Truth Posterior
 
 ### Posterior 
+
 $$
     q(x_{t-1}\mid x_t,x_0)
     = \mathcal{N}\bigl(x_{t-1};\mu_q(x_t,x_0),\,\sigma_q^2(t)\,I\bigr),
 $$
+
 where
 
 $$ 
@@ -63,18 +73,22 @@ $$
     = \frac{\sqrt{α_t}(1-\bar α_{t-1})}{1-\bar α_t}\,x_t
       + \frac{\sqrt{\bar α_{t-1}}(1-α_t)}{1-\bar α_t}\,x_0.
 $$
+
 ---
 
 ## 4. Denoising Network: Predict $ε_0$
 
 ### Network 
+
 $\hat ε_θ(x_t,t)$ predicts the original noise $ε_0$.
 
 ### Reverse mean  
+
 $$
     μ_θ(x_t,t)
     = \frac{1}{\sqrt{α_t}}\Bigl(x_t - \frac{1-α_t}{\sqrt{1-\bar α_t}}\,\hat ε_θ(x_t,t)\Bigr).
 $$
+
 ---
 
 ## 5. Loss Function: Full ELBO in Three Terms
@@ -82,17 +96,20 @@ $$
 The full Evidence Lower Bound (ELBO) decomposes into three loss terms:
 
 - **Reconstruction term**:
+
 $$
 \mathbb{E}_{q(x_1|x_0)} \left[ \log p_θ(x_0 | x_1) \right]
 $$
 
 - **Prior matching term**:
+
 $$
 -\text{KL}(q(x_T|x_0) \| p(x_T)) = 
 -\text{KL}(\mathcal{N}(x_T; \sqrt{\bar α_T} x_0, (1 - \bar α_T) I) \| \mathcal{N}(0, I))
 $$
 
 - **Denoising matching term**:
+
 $$
 -\sum_{t=2}^{T} \mathbb{E}_{q(x_t|x_0)} 
 \left[ \text{KL}(q(x_{t-1} | x_t, x_0) \| p_θ(x_{t-1} | x_t)) \right]
@@ -113,8 +130,6 @@ $$
 \right]
 $$
 
-
-
 This corresponds to:
 
 $$
@@ -129,10 +144,12 @@ $$
 q(x_t \mid x_0) = 
 \mathcal{N}\left(x_t; \sqrt{\bar{\alpha}_t} x_0, (1 - \bar{\alpha}_t)\mathbf{I}\right)
 $$
+
 - Signal: $\mu = \sqrt{\bar{\alpha}_t} x_0$
 - Noise variance: $\sigma^2 = 1 - \bar{\alpha}_t$
 
 We have **signal-to-noise ratio (SNR)= $\frac{\mu^2}{\sigma^2}$**. So at timestep $t$:
+
 $$
 \text{SNR}(t) = \frac{\bar{\alpha}_t}{1 - \bar{\alpha}_t}
 $$
@@ -143,6 +160,7 @@ $$
 \lambda_t = \frac{1}{2} \left( \text{SNR}(t-1) - \text{SNR}(t) \right)=
 \frac{1}{2}(\frac{\hat{\alpha}_{t-1}}{1 - \hat{\alpha}_{t-1}} - \frac{\hat{\alpha}_t}{1-\hat{\alpha}_t})
 $$
+
 ---
 ## 6. Sampling Process After Training
 
@@ -153,30 +171,39 @@ we generate new samples via one of two methods:
 
 1. **Initialization**  
    Sample
+
    $$
    x_T \sim \mathcal{N}(0, I)\,.
    $$
 
-2. **Iterative Reverse Steps**  
-   For \(t = T, T-1, \dots, 1\):
+2. **Iterative Reverse Steps**
+
+   For $t = T, T-1, \dots, 1$:
+
    1. Predict noise:
+   
       $$
       \hat\epsilon = \hat\epsilon_\theta(x_t, t)\,.
       $$
+   
    2. Compute reverse mean:
+   
       $$
       \mu_\theta(x_t, t)
       = \frac{1}{\sqrt{\alpha_t}}\Bigl(x_t - \frac{1 - \alpha_t}{\sqrt{1 - \bar\alpha_t}}\,\hat\epsilon\Bigr).
       $$
+   
 3. Add stochasticity:
+
 $$ 
 x_{t-1} = \mu_\theta(x_t, t) + \sqrt{\tilde\beta_t}\;z_t,  \quad  z_t \sim \mathcal{N}(0, I),
 $$
    
   where
-  $$
-  \tilde\beta_t
-  = \frac{1 - \bar\alpha_{t-1}}{1 - \bar\alpha_t}\,\beta_t.
-  $$
+
+$$
+\tilde\beta_t
+= \frac{1 - \bar\alpha_{t-1}}{1 - \bar\alpha_t}\,\beta_t.
+$$
 
 **Output**: $x_0$ is the final generated sample, approximately following $p(x_0)$.
