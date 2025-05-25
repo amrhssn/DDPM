@@ -64,7 +64,7 @@ distribution with the following mean and covariance:
 
 $$
 \begin{aligned}
-\mu_\theta(x_t, t) &= \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \frac{1 - \alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha_t}} \hat{\epsilon}_\theta(x_t, t) \\
+\mu_\theta(x_t, t) &= \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \frac{1 - \alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha_t}} \hat{\epsilon}_\theta (x_t, t) \\
 \Sigma_q(t) &=\sigma_q^2(t)I=\frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha}_t}I
 \end{aligned}
 $$
