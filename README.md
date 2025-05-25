@@ -45,6 +45,31 @@ $$
 x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 -\bar{\alpha}_t} \epsilon_0
 $$
 
+3. In the reverse decoder, our goal is to learn the approximate conditional
+denoising distribution $q(x_{t-1}|x_t, x_0)$, which can be shown to be 
+a Gaussian distribution 
+$q(x_{t-1}|x_t, x_0) \sim \mathcal{N}(x_{t-1}|\mu_q(x_t, x_0), \Sigma_q(t))$, where:
+
+$$
+\begin{aligned}
+\mu_q(x_t, x_0) &= \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \frac{1 - \alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha_t}}\epsilon_0 \\
+\Sigma_q(t) &=\sigma_q^2(t)I=\frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha}_t}I
+\end{aligned}
+$$
+Since we don't have access to the ground-truth input $x_0$ and the
+initial noise $\epsilon_0$ during the reverse process, we define 
+the decoder's denoising model $p_\theta(x_{t-1}|x_t, t)$ as Gaussian
+distribution with the following mean and covariance:
+
+$$
+\begin{aligned}
+\mu_\theta(x_t, t) &= \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \frac{1 - \alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha_t}}\hat{\epsilon}_\theta(x_t, t) \\
+\Sigma_q(t) &=\sigma_q^2(t)I=\frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha}_t}I
+\end{aligned}
+$$
+
+where the noise is parameterized by a neural network with parameters $\theta$. 
+
 ---
 ## 1. Noise Schedule
 
