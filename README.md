@@ -42,7 +42,7 @@ where $\bar α_t = \prod_{i=1}^t α_i$. By using the reparameterization trick,
 we have:
 
 $$
-x_t = \sqrt{\hat{\alpha}_t} x_0 + \sqrt{1 -\hat{\alpha}_t} \epsilon_0
+x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1 -\bar{\alpha}_t} \epsilon_0
 $$
 
 ---
