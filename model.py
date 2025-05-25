@@ -51,19 +51,25 @@ class DDPM(nn.Module):
         self.register_buffer(name='sqrt_one_minus_alpha_bar', tensor=torch.sqrt(1 - self.alpha_bar))
 
         self.time_encoder = TimeEmbedding(dim=hidden_dim)
+        self.lin1 = nn.Linear(in_features=input_dim, out_features=hidden_dim)
         self.noise_decoder = nn.Sequential(
-            nn.Linear(in_features=input_dim + hidden_dim, out_features=hidden_dim),
+            nn.Linear(in_features=hidden_dim + hidden_dim, out_features=hidden_dim),
             nn.ReLU(),
             nn.Linear(in_features=hidden_dim, out_features=hidden_dim),
             nn.ReLU(),
             nn.Linear(in_features=hidden_dim, out_features=input_dim),
         )
 
-    def diffusion_kernel(self, x_0: torch.Tensor, t: torch.Tensor):
-        sqrt_alpha_bar_t = self.sqrt_alpha_bar[t]
-        sqrt_one_minus_alpha_bar_t = self.sqrt_one_minus_alpha_bar[t]
-        epsilon_0 = torch.randn_like(x_0)
-        x_t = sqrt_alpha_bar_t * x_0 + sqrt_one_minus_alpha_bar_t * epsilon_0
+    def diffusion_kernel(
+            self,
+            x_0: torch.Tensor,
+            t: torch.Tensor,
+            noise: torch.Tensor
+    ):
+        sqrt_alpha_bar_t = self.sqrt_alpha_bar[t].view(-1, 1)
+        sqrt_one_minus_alpha_bar_t = self.sqrt_one_minus_alpha_bar[t].view(-1, 1)
+
+        x_t = sqrt_alpha_bar_t * x_0 + sqrt_one_minus_alpha_bar_t * noise
         return x_t
 
     def forward_encoder(self, x_0: torch.Tensor):
@@ -76,21 +82,18 @@ class DDPM(nn.Module):
         noise = torch.randn_like(x_0)
 
         # run the diffusion process
-        x_t = self.diffusion_kernel(x_0=x_0, t=t)
+        x_t = self.diffusion_kernel(x_0=x_0, t=t, noise=noise)
         return noise, x_t, t
 
     def reverse_decoder(self, x_t: torch.Tensor, t: torch.Tensor):
         time_embeddings = self.time_encoder(t)
-        decoder_input = torch.cat([x_t, time_embeddings], dim=-1)
-        noise_hat = self.noise_nn(decoder_input)
+        decoder_input = torch.cat([F.relu(self.lin1(x_t)), time_embeddings], dim=-1)
+        noise_hat = self.noise_decoder(decoder_input)
         return noise_hat
 
     def compute_loss(self, noise_hat: torch.Tensor, noise: torch.Tensor):
         loss = F.mse_loss(noise_hat, noise)
         return loss
-
-    def sample(self):
-        pass
 
     def forward(self, x_0: torch.Tensor):
         # forward process
@@ -105,10 +108,12 @@ class DDPM(nn.Module):
 
     def approximate_denoising_parameters(self, x, t):
         noise_hat = self.reverse_decoder(x, t)
-        mean_first_term = (1.0 / self.sqrt_alpha[t]) * x
-        mean_second_term = (1.0 - self.alpha[t]) / (self.sqrt_one_minus_alpha_bar[t] * self.sqrt_alpha[t]) * noise_hat
+        mean_first_term = (1.0 / self.sqrt_alpha[t].view(-1, 1)) * x
+        mean_second_term = ((1.0 - self.alpha[t].view(-1, 1)) /
+                            (self.sqrt_one_minus_alpha_bar[t].view(-1, 1) * self.sqrt_alpha[t].view(-1, 1)) * noise_hat)
         mean = mean_first_term - mean_second_term
-        variance = ((1.0 - self.alpha[t]) * (self.sqrt_one_minus_alpha_bar[t - 1])) / self.sqrt_one_minus_alpha_bar[t]
+        variance = ((1.0 - self.alpha[t].view(-1, 1)) *
+                    (self.sqrt_one_minus_alpha_bar[t - 1].view(-1, 1))) / self.sqrt_one_minus_alpha_bar[t].view(-1, 1)
         std = torch.sqrt(variance)
         return mean, std
 
@@ -119,5 +124,5 @@ class DDPM(nn.Module):
             t = torch.full((num_samples,), step, dtype=torch.long, device=device)
             mu, sigma = self.approximate_denoising_parameters(x, t)
             noise = torch.randn_like(x) if step > 1 else 0
-            x = mu + sigma.unsqueeze(-1) * noise
+            x = mu + sigma * noise
         return x
