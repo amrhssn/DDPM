@@ -1,5 +1,25 @@
 # DDPM
 
+The denoising diffusion probabilistic model (DDPM) can be viewed as a Markovian hierarchical
+variational autoencoder, where the forward encoder is a fixed linear Gaussian model, and 
+we are interested in learning the reverse decoder. 
+The idea is to progressively add Gaussian noise to the input data in the forward process
+until it is indistinguishable from the standard Gaussian noise, and learn a denoising model 
+in the backward process to reconstruct the input from the noise.
+
+Specifically, given the Markov property, the forward process can be factorized as 
+$q(x_{1:T}|x_0)= \prod_{t=1}^T q(x_t|x_{t-1})$, where $x_0$ is the input and $x_{1:T}$ are 
+the latent variables given the input. We have 
+$q(x_t|x_{t-1}) = \mathcal{N}(x_t|\sqrt{\alpha_t} x_{t-1}, (1-\alpha_t)I)$, and 
+$\alpha_t = 1-\beta_t$ where $\beta_t$ is the noise level added at each layer of the forward 
+encoder. 
+
+The join distribution of the reverse decoder is 
+$p(x_{0:T})=p(x_T)\prod_{t=1}^T p_\theta(x_{t-1}|x_t)$ where $p(x_T)=\mathcal{N}(x_T|0, I)$. 
+Our goal is to learn the parameters $\theta$ by minimizing the variational lower bound which
+is derived from the forward and reverse processes.
+
+
 ---
 ## 1. Noise Schedule
 
