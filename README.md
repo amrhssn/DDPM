@@ -67,7 +67,24 @@ $$\begin{aligned}
 \Sigma_q(t) &= \sigma_q^2(t)I=\frac{1-\alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha}_t}I
 \end{aligned}$$
 
-where the noise is parameterized by a neural network with parameters $\theta$. 
+where the noise is parameterized by a neural network with parameters $\theta$.
+
+4. It can be shown that maximizing the variational lower bound boils down
+to minimizing the following loss:
+
+$$
+\mathcal{L}_{\text{simple}}(θ) =
+\mathbb{E}_{t \sim \mathcal{U}[1,T],\, ε_0 \sim \mathcal{N}(0,I),\, x_0 \sim \text{data}} \left[
+\left\| ε_0 - \hat ε_θ(x_t, t) \right\|^2
+\right]
+$$
+
+After the training, to generate new samples, execute the reverse process:
+1. Sample a random sample $x_T \sim \mathcal{N}(x_T|0, I)$
+2. For each step of the reverse process $t=T, \dots, 1$:
+   3. If $t > 1$ sample a noise $\epsilon \sim \mathcal{N}(\epsilon|0, I)$, otherwise set $\epsilon=0$
+   4. Compute the denoised sample $x_{t-1}=\mu_\theta(x_t, t) + \sigma_q(t)\epsilon$
+
 
 ---
 ## 1. Noise Schedule
