@@ -1,10 +1,11 @@
 # DDPM
 
+## Overview
 The denoising diffusion probabilistic model (DDPM) can be viewed as a Markovian hierarchical
 variational autoencoder, where the forward encoder is a fixed linear Gaussian model, and 
 we are interested in learning the reverse decoder. 
 The idea is to progressively add Gaussian noise to the input data in the forward process
-until it is indistinguishable from the standard Gaussian noise, and learn a denoising model 
+until it is indistinguishable from the standard Gaussian noise and learn a denoising model 
 in the backward process to reconstruct the input from the noise.
 
 Specifically, given the Markov property, the forward process can be factorized as 
@@ -19,6 +20,30 @@ $p(x_{0:T})=p(x_T)\prod_{t=1}^T p_\theta(x_{t-1}|x_t)$ where $p(x_T)=\mathcal{N}
 Our goal is to learn the parameters $\theta$ by minimizing the variational lower bound which
 is derived from the forward and reverse processes.
 
+## Method
+
+Here are the training steps of the model:
+1. Given an input data batch $x_0 \sim q(x_0)$, we uniformly sample 
+ the timestep index for each data in the batch that corresponds to the associated
+noisy sample, $t \sim \text{Uniform}(\{1, \dots, T\})$. 
+We also sample standard Gaussian noise for each data for the noise process,
+$\epsilon_0 \sim \mathcal{N}(\epsilon_0|0, I)$.
+2. In the forward encoder, we run the noise process $q(x_t|x_{t-1})$ for each sample in 
+the input batch up to timestep $t$. 
+Since the noise process is a linear Gaussian model, we can derive the 
+closed-form formula of the noisy sample based on the input, 
+initial noise $\epsilon_0$ and timestep $t$:
+
+$$
+q(x_t|x_0) \sim \mathcal{N}(x_t|\sqrt{\bar{\alpha}_t} x_0, (1 -\bar{\alpha}_t) I)
+$$
+
+where $\bar α_t = \prod_{i=1}^t α_i$. By using the reparameterization trick, 
+we have:
+
+$$
+x_t = \sqrt{\hat{\alpha}_t} x_0 + \sqrt{1 -\hat{\alpha}_t} \epsilon_0
+$$
 
 ---
 ## 1. Noise Schedule
