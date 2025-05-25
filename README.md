@@ -61,7 +61,6 @@ Since we don't have access to the ground-truth input $x_0$ and the
 initial noise $\epsilon_0$ during the reverse process, we define 
 the decoder's denoising model $p_\theta(x_{t-1}|x_t, t)$ as Gaussian
 distribution with the following mean and covariance:
-
 $$
 \begin{aligned}
 \mu_\theta(x_t, t) &= \frac{1}{\sqrt{\bar{\alpha}_t}}x_t - \frac{1 - \alpha_t}{\sqrt{1-\bar{\alpha}_t}\sqrt{\alpha_t}}\hat{\epsilon}_\theta(x_t, t) \\
